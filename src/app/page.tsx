@@ -1,103 +1,187 @@
-import Image from "next/image";
+'use client'
+import { Swiper, SwiperSlide } from 'swiper/react'
+import { Swiper as SwiperType } from 'swiper'
+import { Autoplay } from 'swiper/modules'
+import 'swiper/css'
+import { useRef, useState, useEffect } from 'react'
+import gsap from 'gsap'
+import { useGSAP } from '@gsap/react'
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [activeIndex, setActiveIndex] = useState(-1)
+  const [currentTranslate, setCurrentTranslate] = useState(0)
+  const swiperRef = useRef<SwiperType | null>(null)
+  const [centerOffset, setCenterOffset] = useState(0)
+  const slides = [
+    { id: 1, content: 'slide 1', bg: '!bg-red-500' },
+    { id: 2, content: 'slide 2', bg: '!bg-blue-500' },
+    { id: 3, content: 'slide 3', bg: '!bg-green-500' },
+    { id: 4, content: 'slide 4', bg: '!bg-yellow-500' },
+    { id: 5, content: 'slide 5', bg: '!bg-purple-500' },
+    { id: 6, content: 'slide 6', bg: '!bg-pink-500' },
+    { id: 7, content: 'slide 7', bg: '!bg-indigo-500' },
+    { id: 8, content: 'slide 8', bg: '!bg-teal-500' },
+    { id: 9, content: 'slide 9', bg: '!bg-orange-500' },
+    { id: 10, content: 'slide 10', bg: '!bg-lime-500' },
+    { id: 11, content: 'slide 11', bg: '!bg-cyan-500' },
+    { id: 12, content: 'slide 12', bg: '!bg-emerald-500' },
+    { id: 13, content: 'slide 13', bg: '!bg-fuchsia-500' },
+    { id: 14, content: 'slide 14', bg: '!bg-rose-500' },
+    { id: 15, content: 'slide 15', bg: '!bg-sky-500' }
+  ]
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const slideRefs = useRef<Array<HTMLDivElement | null>>(slides.map(() => null))
+
+  const handleSlideChange = (swiper: SwiperType) => {
+    console.log('slide changed', swiper.realIndex)
+    const centerSlideRect = slideRefs.current[swiper.realIndex]?.getBoundingClientRect()
+    const centerOffset = centerSlideRect ? centerSlideRect.left + centerSlideRect.width / 2 : 0
+    setCenterOffset(centerOffset)
+    console.log('centerOffset', centerOffset)
+    setActiveIndex(swiper?.realIndex)
+  }
+
+  useEffect(() => {
+    if (!slideRefs.current?.[0]) return
+    const centerSlideRect = slideRefs.current[activeIndex]?.getBoundingClientRect()
+    const centerOffset = centerSlideRect ? centerSlideRect.left + centerSlideRect.width / 2 : 0
+    setCenterOffset(centerOffset)
+    console.log('centerOffset', centerOffset)
+  }, [activeIndex])
+
+  const RADIUS = 6000 //px
+  const SLIDE_GAP = 40 //px
+
+  useGSAP(() => {
+    slideRefs.current.forEach((slideRef, index) => {
+      if (!slideRef) return
+      const slideRect = slideRef.getBoundingClientRect()
+      const slideWidth = slideRect.width
+
+      let offsetIndex = index - activeIndex
+      const totalSlides = slides.length
+      if (offsetIndex > totalSlides / 2) offsetIndex -= totalSlides
+      if (offsetIndex < -totalSlides / 2) offsetIndex += totalSlides
+      const slideCenter = slideRect?.left + slideWidth / 2 - centerOffset
+
+      const xOffSet = slideCenter
+
+      const theta = Math.acos(xOffSet / RADIUS)
+      const yOffset = (1 - Math.sin(theta)) * RADIUS
+      gsap.set(slideRef, {
+        y: yOffset,
+        rotation: `${Math.PI / 2 - theta}rad`,
+        transformOrigin: 'center bottom',
+        duration: 0.5,
+        ease: 'power2.out'
+      })
+
+      setTimeout(() => {
+        const thetaElement = slideRef.querySelector('.theta')
+        if (thetaElement) {
+          thetaElement.textContent = `theta: ${theta.toFixed(2)}`
+        }
+        const rotationElement = slideRef.querySelector('.rotation')
+        if (rotationElement) {
+          rotationElement.textContent = `rotation: ${Math.PI / 2 - theta}`
+        }
+        const leftElement = slideRef.querySelector('.left')
+        if (leftElement) {
+          leftElement.textContent = `left: ${slideRect.left}`
+        }
+        const widthElement = slideRef.querySelector('.width')
+        if (widthElement) {
+          widthElement.textContent = `width: ${slideWidth.toFixed(2)}`
+        }
+        const directionElement = slideRef.querySelector('.direction')
+        if (directionElement) {
+          directionElement.textContent = `direction: ${offsetIndex > 0 ? 'right' : 'left'}`
+        }
+        const slideCenterElement = slideRef.querySelector('.lineLeft')
+        if (slideCenterElement) {
+          slideCenterElement.textContent = `lineLeft: ${
+            slideRect.left + slideWidth / 2 - centerOffset
+          }`
+        }
+      }, 100)
+    })
+  }, [centerOffset, currentTranslate, activeIndex])
+
+  return (
+    <div className='h-screen w-screen flex overflow-hidden relative '>
+      <div className='absolute bg-red-500 h-full w-[1px] left-1/2 -translate-x-1/2 z-30' />
+      <Swiper
+        className='!max-w-screen my-auto py-20 border border-red-500 my-stepped-carousal transition-all'
+        modules={[Autoplay]}
+        spaceBetween={SLIDE_GAP}
+        slidesPerView='auto'
+        centeredSlides
+        loop={true}
+        speed={500}
+        onSetTranslate={() => {
+          setCurrentTranslate(swiperRef.current?.translate ?? 0)
+        }}
+        onSwiper={(swiper) => {
+          console.log('swiper initialized', swiper)
+          swiperRef.current = swiper
+          setActiveIndex(swiper.realIndex)
+        }}
+        onSlideChange={handleSlideChange}
+        autoplay={{
+          delay: 2000
+        }}
+      >
+        {slides.map((slide, slideIndex) => {
+          // Create a ref for each slide
+          return (
+            <SwiperSlide
+              className={`!h-fit !w-fit  card-slide card-slide-${slide.id}`}
+              key={slide.id}
+              virtualIndex={slideIndex}
+            >
+              {() => {
+                return (
+                  <div
+                    className={`${slide.bg} !h-[300px] relative !w-[250px]`}
+                    key={slide.id}
+                    ref={(el) => {
+                      slideRefs.current[slideIndex] = el
+                    }}
+                  >
+                    <div>slide: {slideIndex}</div>
+                    <div className='slideCenter'>slideCenter: </div>
+                    <div className='slideCenterOffset'>slideCenter: </div>
+                    <div className='theta'>theta: </div>
+                    <div className='rotation'>rotation: </div>
+                    <div className='left'>left: </div>
+                    <div className='width'>width: </div>
+                    <div className='direction'>direction: </div>
+                    <div className='lineLeft'>lineLeft: </div>
+                  </div>
+                )
+              }}
+            </SwiperSlide>
+          )
+        })}
+      </Swiper>
+
+      <div className='absolute top-0 left-0 right-0 flex justify-between p-4'>
+        <button
+          onClick={() => swiperRef.current?.slidePrev()}
+          className='bg-white rounded-full p-2 shadow'
+        >
+          Prev
+        </button>
+        <div className=''>
+          <p>centerOffset: {centerOffset}</p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={() => swiperRef.current?.slideNext()}
+          className='bg-white rounded-full p-2 shadow'
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          Next
+        </button>
+      </div>
     </div>
-  );
+  )
 }

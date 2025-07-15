@@ -115,7 +115,7 @@ export default function Home() {
         modules={[Autoplay]}
         spaceBetween={SLIDE_GAP}
         slidesPerView='auto'
-        centeredSlides
+        // centeredSlides
         loop={true}
         speed={500}
         onSetTranslate={() => {
@@ -150,7 +150,7 @@ export default function Home() {
                   >
                     <div>slide: {slideIndex}</div>
                     <div className='slideCenter'>slideCenter: </div>
-                    <div className='slideCenterOffset'>slideCenter: </div>
+                    <div className='slideCenterOffset'>slideCenter: {activeIndex}</div>
                     <div className='theta'>theta: </div>
                     <div className='rotation'>rotation: </div>
                     <div className='left'>left: </div>
